@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+   <annoDiInizio>2018</annoDiInizio>
+   <aula>
+      <nome>14CE</nome>
+      <numeroDiBanchi>20</numeroDiBanchi>
+   </aula>
+   <classe>5b</classe>
+   <numeroFinestre>3</numeroFinestre>
+   <specializzazione>IA</specializzazione>
+   <studenti>
+      <element>
+         <annoDiNascita>2003</annoDiNascita>
+         <cognome>Bianchi</cognome>
+         <nome>Tommaso</nome>
+      </element>
+      <element>
+         <annoDiNascita>2004</annoDiNascita>
+         <cognome>Hu</cognome>
+         <nome>Tommaso</nome>
+      </element>
+   </studenti>
+</root>
