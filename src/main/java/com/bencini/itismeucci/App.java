@@ -17,13 +17,15 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.StringTokenizer;
 
-public class App implements Runnable{
+public class App implements Runnable {
     static final File WEB_ROOT = new File("./src/main/resources");
     static final String DEFAULT_FILE = "index.html";
-    static final String FILE_NOT_FOUND = "pages/404.html";
-    static final String METHOD_NOT_SUPPORTED = "pages/not_supported.html";
+    static final String FILE_NOT_FOUND = "./pages/404.html";
+    static final String METHOD_NOT_SUPPORTED = "./pages/not_supported.html";
     String XMLclasse = "src/main/resources/classe.xml";
+    String JSONclasse = "src/main/resources/puntiVendita.json";
     File fileXML = new File(XMLclasse);
+    File fileJSON = new File(JSONclasse);
     XmlMapper xmlMapper = new XmlMapper();
     ObjectMapper objectMapper = new ObjectMapper();
 
@@ -59,18 +61,28 @@ public class App implements Runnable{
 
     }
 
-    public void xmlDeserializer() throws IOException {
+    public root xmlDeserializer() throws IOException {
         root value = xmlMapper.readValue(fileXML, root.class);
 
         for (int i = 0; i < value.getStudenti().size(); i++) {
             System.out.println("-" + value.getStudenti().get(i).getCognome());
         }
+        return value;
     }
 
-    public void jsonSerializer() throws IOException{
-        String JSONclasse = "src/main/resources/classe.json";
-        File fileJSON = new File(JSONclasse);
-        objectMapper.writeValue(fileJSON, root.class);
+    public String jsonSerializer() throws IOException {
+        root value = xmlDeserializer();
+        return objectMapper.writeValueAsString(value);
+    }
+
+    public root jsonDeserializer() throws IOException {
+        root value = objectMapper.readValue(fileJSON, root.class);
+        return value;
+    }
+
+    public String xmlSerializer() throws IOException {
+        root value = jsonDeserializer();
+        return objectMapper.writeValueAsString(value);
     }
 
     @Override
@@ -124,34 +136,59 @@ public class App implements Runnable{
                     fileRequested += DEFAULT_FILE;
                 }
 
-                File file = new File(WEB_ROOT, fileRequested);
-                int fileLength = (int) file.length();
-                String content = getContentType(fileRequested);
-
                 if (method.equals("GET")) {
-
-                    byte[] fileData = readFileData(file, fileLength);
 
                     if (transfer) {
                         out.println("HTTP/1.1 301 Resource Transfered");
                         out.println("Location: http://localhost:" + PORT);
-                    } else
-                        out.println("HTTP/1.1 200 OK");
+                    }
+
+
+                    byte[] fileData = null;
+                    Integer fileLength = null;
+
+                    String content = getContentType(fileRequested);
+
+                    if (fileRequested.endsWith("classe.json")) {
+                        String s = jsonSerializer();
+                        fileData = s.getBytes();
+                        fileLength = s.length();
+                    } else if(fileRequested.endsWith("puntivendita.xml")){
+                        String s = xmlSerializer();
+                        fileData = s.getBytes();
+                        fileLength = s.length();
+                    } else {
+
+                        // leggo file da file system
+                        File file = new File(WEB_ROOT, fileRequested);
+                        fileLength = (int) file.length();
+
+                        fileData = readFileData(file, fileLength);
+
+                        // fileNotFound(out, dataOut, fileRequested);
+                    }
+
+
+
+                    out.println("HTTP/1.1 200 OK");
                     out.println("Server: Java HTTP Server from SSaurel : 1.0");
                     out.println("Date: " + new Date());
                     out.println("Content-type: " + content);
                     out.println("Content-length: " + fileLength);
                     out.println();
                     out.flush();
-
                     dataOut.write(fileData, 0, fileLength);
                     dataOut.flush();
+
                 }
 
                 if (verbose) {
+                    String content = getContentType(fileRequested);
+
                     System.out.println("input:" + input + "\n");
                     System.out.println("File " + fileRequested + " of type " + content + " returned");
                 }
+
             }
 
         } catch (FileNotFoundException fnfe) {
